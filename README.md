@@ -11,4 +11,4 @@ An AI-powered smart navigation system that predicts future traffic congestion, r
 - AI Traffic Prediction
 - Smart Departure Time Recommendation
 - Parking Availability Prediction
-- Interactive Map Interface
+- Interactive Map Interface  
