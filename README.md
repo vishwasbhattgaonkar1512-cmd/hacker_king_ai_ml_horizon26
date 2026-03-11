@@ -143,3 +143,146 @@ The ML pipeline consists of the following steps:
 Datasets used:
 
 Traffic Dataset
+
+dataset/Traffic.csv
+
+
+Parking Dataset
+
+dataset/dataset.csv
+
+
+---
+
+### 2️⃣ Data Cleaning
+
+• Removed null values  
+• Standardized columns  
+• Extracted required features  
+
+Example features:
+
+Traffic Dataset
+
+CarCount
+BikeCount
+BusCount
+TruckCount
+Traffic Situation
+
+Parking Dataset
+
+Capacity
+Occupancy
+Available Spaces
+
+
+---
+
+### 3️⃣ Feature Engineering
+
+Traffic Features
+
+CarCount
+BikeCount
+BusCount
+TruckCount
+
+
+Parking Features
+
+
+Capacity
+Occupancy
+
+
+Derived Feature:
+
+Available = Capacity − Occupancy
+
+
+---
+
+### 4️⃣ Model Training
+
+Training script:
+
+train_models.py
+
+Process:
+
+Dataset → Train/Test Split → Model Training → Model Export
+
+
+Models saved as:
+
+models/traffic_model.pkl
+models/parking_model.pkl
+
+
+---
+
+# 💻 Tech Stack
+
+### Frontend
+
+| Technology | Usage |
+|-----------|------|
+HTML5 | UI Structure |
+Bulma CSS | Responsive layout |
+Custom CSS | Animations & styling |
+Chart.js | Data visualization |
+Leaflet.js | Interactive map |
+
+---
+
+### Backend
+
+| Technology | Usage |
+|-----------|------|
+Python | Core programming |
+FastAPI | Backend API |
+Uvicorn | ASGI server |
+Pandas | Data processing |
+
+---
+
+### Machine Learning
+
+| Library | Usage |
+|-------|------|
+Scikit-Learn | ML models |
+Joblib | Model serialization |
+
+---
+
+# 📂 Project Structure
+
+UrbanFlow-AI
+│
+├── backend
+│ ├── main.py
+│ └── requirements.txt
+│
+├── ai_features
+│ ├── departure_planner.py
+│ └── personalized_learning.py
+│
+├── dataset
+│ ├── Traffic.csv
+│ └── dataset.csv
+│
+├── models
+│ ├── traffic_model.pkl
+│ └── parking_model.pkl
+│
+├── frontend
+│ ├── index.html
+│ └── index.css
+│
+├── train_models.py
+├── evaluate_models.py
+│
+├── README.md
+└── .gitignore
+
