@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanFlow AI - Advanced Dark Dashboard</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Professional Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* === GLOBAL VARIABLES === */
+        :root {
+            --bg-base: #020617;       /* Very deep slate/black */
+            --bg-surface: rgba(15, 23, 42, 0.6); /* Glassy dark blue */
+            --primary: #3b82f6;       /* Vibrant Blue */
+            --primary-hover: #60a5fa;
+            --secondary: #8b5cf6;     /* Vibrant Purple */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(59, 130, 246, 0.4);
+            
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --success-border: rgba(16, 185, 129, 0.3);
+            
+            --radius-md: 16px;
+            --radius-sm: 8px;
+            
+            --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+            --shadow-hover: 0 10px 30px -10px rgba(59, 130, 246, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* === DYNAMIC BACKGROUND ANIMATIONS === */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+            z-index: -2;
+            animation: pulseBg 15s ease-in-out infinite alternate;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" fill="rgba(255,255,255,0.03)"/></svg>');
+            background-size: 30px 30px;
+            z-index: -1;
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        @keyframes pulseBg {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+
+        @keyframes slideUpFade {
+            0% { opacity: 0; transform: translateY(40px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes borderGlow {
+            0% { border-color: rgba(255,255,255,0.08); box-shadow: 0 0 0 transparent; }
+            50% { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+            100% { border-color: rgba(255,255,255,0.08); box-shadow: 0 0 0 transparent; }
+        }
+
+        /* === TOP NAVIGATION === */
+        header {
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand h1 {
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .brand p {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success);
+            animation: statusPulse 2s infinite;
+        }
+
+        @keyframes statusPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* === DASHBOARD LAYOUT === */
+        .dashboard-container {
+            max-width: 1440px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        /* === GLASSMORPHISM CARDS === */
+        .card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            opacity: 0; /* Starting state for animation */
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Staggered entrance animations */
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+        .card:nth-child(5) { animation-delay: 0.5s; }
+        .card:nth-child(6) { animation-delay: 0.6s; }
+        .card:nth-child(7) { animation-delay: 0.7s; }
+        .card:nth-child(8) { animation-delay: 0.8s; }
+        .card:nth-child(9) { animation-delay: 0.9s; }
+
+        .card:hover {
+            transform: translateY(-5px) scale(1.01);
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-hover);
+            background: rgba(30, 41, 59, 0.8);
+            z-index: 10;
+        }
+
+        .card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card h3::after {
+            content: '✦'; /* Futuristic accent */
+            font-size: 16px;
+            color: var(--primary);
+            opacity: 0.7;
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        /* === INPUTS & BUTTONS === */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input::placeholder { color: #64748b; }
+
+        input:focus {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--primary), #2563eb);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg);
+            transition: 0.5s;
+        }
+
+        button:hover::before {
+            left: 150%;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, var(--primary-hover), #1d4ed8);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* Secondary Button Style */
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            box-shadow: none;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-muted);
+            box-shadow: 0 4px 15px rgba(255,255,255,0.05);
+        }
+
+        /* === INLINE ALERTS (Results) === */
+        .result {
+            margin-top: auto;
+            padding: 16px;
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            border-left: 4px solid var(--success);
+            color: var(--success);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            line-height: 1.6;
+            animation: resultPopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .result:empty {
+            display: none;
+        }
+
+        .result strong {
+            color: #fff;
+        }
+
+        @keyframes resultPopIn {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* === CHARTS & MAPS === */
+        .chart-container {
+            margin-top: 20px;
+            height: 180px;
+            width: 100%;
+            position: relative;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .map-card {
+            grid-column: 1 / -1;
+        }
+
+        #map {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            z-index: 1; /* Keep map below header */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        /* Map UI Styling for Dark Theme */
+        .leaflet-container {
+            font-family: 'Inter', sans-serif;
+            background: #020617;
+        }
+        .leaflet-popup-content-wrapper {
+            background: rgba(15, 23, 42, 0.9);
+            color: #fff;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .leaflet-popup-tip {
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header { padding: 16px 20px; flex-direction: column; gap: 12px; align-items: flex-start; }
+            .dashboard-container { grid-template-columns: 1fr; margin-top: 20px; }
+            #map { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Professional Dark Header -->
+    <header>
+        <div class="brand">
+            <h1>UrbanFlow AI</h1>
+            <p>Next-Gen Urban Navigation Core</p>
+        </div>
+        <div class="header-status">
+            <div class="status-dot"></div>
+            SYSTEM ONLINE
+        </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard-container">
+        
+        <!-- TRAFFIC PREDICTION -->
+        <div class="card">
+            <h3>Traffic Analytics</h3>
+            <div class="form-group">
+                <input id="hour" type="number" min="0" max="23" placeholder="Time (0-23 hrs)">
+                <button onclick="predictTraffic()">Run Prediction</button>
+            </div>
+            <div class="result" id="traffic"></div>
+            <div class="chart-container">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
+
+        <!-- PARKING AVAILABILITY -->
+        <div class="card">
+            <h3>Parking Capacity</h3>
+            <div class="form-group">
+                <button onclick="predictParking()">Check Live Availability</button>
+            </div>
+            <div class="result" id="parking"></div>
+            <div class="chart-container">
+                <canvas id="parkingChart"></canvas>
+            </div>
+        </div>
+
+        <!-- FORECAST -->
+        <div class="card">
+            <h3>Short-term Forecast</h3>
+            <div class="form-group">
+                <input id="forecastHour" type="number" min="0" max="23" placeholder="Current Hour (0-23)">
+                <button onclick="forecastTraffic()">Generate Forecast</button>
+            </div>
+            <div class="result" id="forecast"></div>
+        </div>
+
+        <!-- SMART DEPARTURE -->
+        <div class="card">
+            <h3>Smart Departure</h3>
+            <div class="form-group">
+                <input id="depHour" type="number" min="0" max="23" placeholder="Target Travel Hour">
+                <button onclick="predictDeparture()">Optimize Departure</button>
+            </div>
+            <div class="result" id="departure"></div>
+        </div>
+
+        <!-- ROUTE RECOMMENDATION -->
+        <div class="card">
+            <h3>Dynamic Routing</h3>
+            <div class="form-group">
+                <input id="routeTraffic" placeholder="Traffic condition (e.g. Heavy)">
+                <button onclick="getRoute()">Suggest Optimal Route</button>
+            </div>
+            <div class="result" id="route"></div>
+        </div>
+
+        <!-- PERSONALIZED LEARNING -->
+        <div class="card">
+            <h3>Neural Pattern Learning</h3>
+            <div class="form-group">
+                <div class="form-row">
+                    <input id="userId" placeholder="User ID">
+                    <input id="travelHour" type="number" min="0" max="23" placeholder="Hour">
+                </div>
+                <div class="form-row">
+                    <button onclick="recordTravel()" class="btn-secondary" style="flex:1;">Record Data</button>
+                    <button onclick="recommendTime()" style="flex:1;">Get Insights</button>
+                </div>
+            </div>
+            <div class="result" id="learning"></div>
+        </div>
+
+        <!-- MODEL ACCURACY -->
+        <div class="card">
+            <h3>System Metrics</h3>
+            <div class="form-group">
+                <button onclick="showAccuracy()" class="btn-secondary">View Model Accuracy</button>
+            </div>
+            <div class="result" id="accuracy"></div>
+        </div>
+
+        <!-- AI EXPLANATION -->
+        <div class="card">
+            <h3>Model Transparency</h3>
+            <div class="form-group">
+                <button onclick="showExplain()" class="btn-secondary">Explain AI Logic</button>
+            </div>
+            <div class="result" id="explain"></div>
+        </div>
+
+        <!-- FULL WIDTH MAP -->
+        <div class="card map-card">
+            <h3>Live Geographical Tracking</h3>
+            <div class="form-group" style="max-width: 250px;">
+                <button onclick="loadTrafficMap()">Initialize Network Map</button>
+            </div>
+            <div id="map"></div>
+        </div>
+
+    </main>
+
+    <!-- MAIN JAVASCRIPT: Logic strictly untouched, only styles configured for dark mode -->
+    <script>
+        // Configure charts for Dark UI
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+        Chart.defaults.scale.grid.borderColor = 'rgba(255, 255, 255, 0.05)';
+
+        let trafficChart
+        let parkingChart
+        let map
+
+        async function predictTraffic(){
+            let hour=document.getElementById("hour").value
+            if(hour===""){ alert("Enter hour"); return; }
+            let res=await fetch(`http://127.0.0.1:8000/traffic?hour=${hour}`)
+            let data=await res.json()
+            
+            let level=data.traffic_prediction
+            document.getElementById("traffic").innerHTML=
+                "<strong>Status:</strong> "+level+
+                "<br><strong>Cars:</strong> "+data.cars+
+                " | <strong>Bikes:</strong> "+data.bikes+
+                "<br><strong>Buses:</strong> "+data.buses+
+                " | <strong>Trucks:</strong> "+data.trucks
+            drawTrafficChart(data)
+        }
+
+        function drawTrafficChart(data){
+            const chartData={
+                labels:["Cars","Bikes","Buses","Trucks"],
+                datasets:[{
+                    label:"Vehicle Distribution",
+                    data:[data.cars,data.bikes,data.buses,data.trucks],
+                    backgroundColor:["#3b82f6", "#0ea5e9", "#8b5cf6", "#ec4899"],
+                    borderRadius: 6,
+                    barPercentage: 0.6
+                }]
+            }
+            if(trafficChart){trafficChart.destroy()}
+            trafficChart=new Chart(
+                document.getElementById("trafficChart"),
+                {
+                    type:"bar",
+                    data:chartData,
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                }
+            )
+        }
+
+        async function predictParking(){
+            let res=await fetch("http://127.0.0.1:8000/parking")
+            let data=await res.json()
+            let value=parseInt(data.parking_availability)
+            
+            document.getElementById("parking").innerHTML=
+                "<strong>Available Spots:</strong> "+value+
+                "<br><strong>Total Capacity:</strong> "+data.capacity+
+                "<br><strong>Currently Occupied:</strong> "+data.occupancy
+            drawParkingChart(value)
+        }
+
+        function drawParkingChart(value){
+            const data={
+                labels:["Availability"],
+                datasets:[{
+                    label:"Free Spaces",
+                    data:[value],
+                    backgroundColor:["#10b981"],
+                    borderRadius: 6,
+                    barPercentage: 0.4
+                }]
+            }
+            if(parkingChart){parkingChart.destroy()}
+            parkingChart=new Chart(
+                document.getElementById("parkingChart"),
+                {
+                    type:"bar",
+                    data:data,
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                }
+            )
+        }
+
+        async function forecastTraffic(){
+            let hour=document.getElementById("forecastHour").value
+            if(hour===""){ alert("Enter hour"); return; }
+            let res=await fetch(`http://127.0.0.1:8000/traffic_forecast?hour=${hour}`)
+            let data=await res.json()
+            let text="<strong>Projected Conditions:</strong><br>"
+            data.forecast.forEach(item=>{
+                text+="• Hour "+item.hour+" &rarr; "+item.traffic+"<br>"
+            })
+            document.getElementById("forecast").innerHTML=text
+        }
+
+        async function predictDeparture(){
+            let hour=document.getElementById("depHour").value
+            let res=await fetch(`http://127.0.0.1:8000/departure?hour=${hour}`)
+            let data=await res.json()
+            document.getElementById("departure").innerHTML="<strong>Recommendation:</strong><br>" + data.departure_advice
+        }
+
+        async function getRoute(){
+            let traffic=document.getElementById("routeTraffic").value
+            let res=await fetch(`http://127.0.0.1:8000/route?traffic=${traffic}`)
+            let data=await res.json()
+            document.getElementById("route").innerHTML="<strong>Suggested Route:</strong><br>" + data.route
+        }
+
+        async function recordTravel(){
+            let user=document.getElementById("userId").value
+            let hour=document.getElementById("travelHour").value
+            let res=await fetch(`http://127.0.0.1:8000/learn?user_id=${user}&hour=${hour}`)
+            let data=await res.json()
+            document.getElementById("learning").innerHTML="<strong>System Log:</strong><br>" + data.message
+        }
+
+        async function recommendTime(){
+            let user=document.getElementById("userId").value
+            let res=await fetch(`http://127.0.0.1:8000/recommend?user_id=${user}`)
+            let data=await res.json()
+            document.getElementById("learning").innerHTML="<strong>AI Insight:</strong><br>" + data.recommended_time
+        }
+
+        async function showAccuracy(){
+            try{
+                let res = await fetch("http://127.0.0.1:8000/model_accuracy")
+                let data = await res.json()
+                let trafficAcc = data.traffic_model_accuracy
+                let parkingErr = data.parking_model_error
+                
+                document.getElementById("accuracy").innerHTML = `
+                <strong>Traffic Model Accuracy:</strong> ${trafficAcc}<br>
+                <strong>Parking Model Error:</strong> ${parkingErr}
+                `
+            } catch(err){
+                document.getElementById("accuracy").innerHTML = "Unable to load model metrics."
+            }
+        }
+
+        async function showExplain(){
+            let res=await fetch("http://127.0.0.1:8000/explain")
+            let data=await res.json()
+            document.getElementById("explain").innerHTML=
+                "<strong>Model Architecture:</strong> "+data.model+
+                "<br><strong>Key Features:</strong> "+data.traffic_features.join(", ")+
+                "<br><br><strong>Logic Base:</strong> "+data.reason
+        }
+
+        function loadTrafficMap(){
+            if(map){return}
+            map=L.map('map').setView([19.0760,72.8777],11)
+            // Beautiful Dark Mode map tiles from CartoDB
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+                maxZoom:19,
+                attribution: '&copy; <a href="https://carto.com/">CARTO</a>'
+            }).addTo(map)
+            addMarkers()
+        }
+
+        async function addMarkers(){
+            let hour=document.getElementById("hour").value || 10
+            let locations=[
+                {name:"Bandra",lat:19.0596,lon:72.8295},
+                {name:"Andheri",lat:19.1136,lon:72.8697},
+                {name:"Dadar",lat:19.0180,lon:72.8420},
+                {name:"Borivali",lat:19.2307,lon:72.8567},
+                {name:"Colaba",lat:18.9067,lon:72.8147}
+            ]
+            for(let loc of locations){
+                let res=await fetch(`http://127.0.0.1:8000/traffic?hour=${hour}`)
+                let data=await res.json()
+                let traffic=data.traffic_prediction
+                
+                // Dark mode complementary neon colors for the map markers
+                let color="#10b981" // Neon Green
+                if(traffic==="Normal Traffic") color="#f59e0b" // Neon Amber
+                if(traffic==="High Traffic") color="#ef4444" // Neon Red
+                if(traffic==="Heavy Traffic") color="#991b1b" // Deep Red
+                
+                let circle=L.circle([loc.lat,loc.lon],{
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.3,
+                    weight: 2,
+                    radius: 1200
+                }).addTo(map)
+                
+                circle.bindPopup(`
+                    <div style="font-family: 'Inter', sans-serif;">
+                        <strong style="font-size: 14px; color: #f8fafc;">${loc.name}</strong><br>
+                        <span style="color:${color}; font-weight:600; font-size: 13px;">${traffic}</span>
+                    </div>
+                `)
+            }
+        }
+    </script>
+</body>
+</html>
